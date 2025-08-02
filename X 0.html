@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        /* --- Basic Setup --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Game Container --- */
+        #game-container {
+            text-align: center;
+            background-color: #fff;
+            padding: 2rem 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 3rem;
+            color: #1c1e21;
+        }
+
+        /* --- Game Board --- */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            margin: 2rem 0;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #e4e6eb;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .cell:hover {
+            background-color: #dcdfe3;
+        }
+        
+        .cell.x {
+            color: #ff5252; /* Red for X */
+        }
+
+        .cell.o {
+            color: #448aff; /* Blue for O */
+        }
+
+        /* --- Status and Button --- */
+        #status {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            height: 30px; /* Reserve space to prevent layout shift */
+        }
+
+        button {
+            background-color: #42b72a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #36a420;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>Tic-Tac-Toe</h1>
+        <div id="status">Player X's turn</div>
+        <div id="game-board"></div>
+        <button id="restartButton">Restart Game</button>
+    </div>
+
+    <script>
+        // --- Get DOM Elements ---
+        const gameBoard = document.getElementById('game-board');
+        const statusDisplay = document.getElementById('status');
+        const restartButton = document.getElementById('restartButton');
+
+        // --- Game State ---
+        let gameActive = true;
+        let currentPlayer = 'X';
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        // --- Messages ---
+        const winningMessage = () => `Player ${currentPlayer} has won!`;
+        const drawMessage = () => `Game ended in a draw!`;
+        const currentPlayerTurn = () => `Player ${currentPlayer}'s turn`;
+
+        /**
+         * Creates the game board cells
+         */
+        function createBoard() {
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-cell-index', i);
+                cell.addEventListener('click', handleCellClick);
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        /**
+         * Handles a click on a cell
+         */
+        function handleCellClick(clickedCellEvent) {
+            const clickedCell = clickedCellEvent.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+            if (gameState[clickedCellIndex] !== "" || !gameActive) {
+                return;
+            }
+
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            handleResultValidation();
+        }
+
+        /**
+         * Updates the game state and UI for a played cell
+         */
+        function handleCellPlayed(clickedCell, clickedCellIndex) {
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+        }
+
+        /**
+         * Checks for a win or draw condition
+         */
+        function handleResultValidation() {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameState[winCondition[0]];
+                let b = gameState[winCondition[1]];
+                let c = gameState[winCondition[2]];
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.textContent = winningMessage();
+                gameActive = false;
+                return;
+            }
+
+            let roundDraw = !gameState.includes("");
+            if (roundDraw) {
+                statusDisplay.textContent = drawMessage();
+                gameActive = false;
+                return;
+            }
+
+            handlePlayerChange();
+        }
+
+        /**
+         * Switches the current player
+         */
+        function handlePlayerChange() {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusDisplay.textContent = currentPlayerTurn();
+        }
+
+        /**
+         * Resets the game to its initial state
+         */
+        function handleRestartGame() {
+            gameActive = true;
+            currentPlayer = "X";
+            gameState = ["", "", "", "", "", "", "", "", ""];
+            statusDisplay.textContent = currentPlayerTurn();
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.textContent = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        // --- Event Listeners ---
+        restartButton.addEventListener('click', handleRestartGame);
+
+        // --- Initialize Game ---
+        createBoard();
+
+    </script>
+</body>
+</html>
