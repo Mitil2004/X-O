@@ -93,6 +93,8 @@
     </style>
 </head>
 <body>
+    <!-- The audio tag belongs in the body, but outside the main game container is fine -->
+    <audio id="background-music" src="assets/background-music.mp3" loop></audio>
 
     <div id="game-container">
         <h1>Tic-Tac-Toe</h1>
@@ -106,11 +108,13 @@
         const gameBoard = document.getElementById('game-board');
         const statusDisplay = document.getElementById('status');
         const restartButton = document.getElementById('restartButton');
+        const backgroundMusic = document.getElementById('background-music');
 
         // --- Game State ---
         let gameActive = true;
         let currentPlayer = 'X';
         let gameState = ["", "", "", "", "", "", "", "", ""];
+        let musicStarted = false;
 
         const winningConditions = [
             [0, 1, 2],
@@ -142,9 +146,26 @@
         }
 
         /**
+         * Tries to play music once the user interacts with the page.
+         * Browsers block autoplay until the user clicks something.
+         */
+        function playMusic() {
+            if (!musicStarted) {
+                backgroundMusic.play().then(() => {
+                    musicStarted = true;
+                }).catch(error => {
+                    // Autoplay was prevented. User needs to interact more.
+                    console.log("Music autoplay was prevented by the browser.");
+                });
+            }
+        }
+
+        /**
          * Handles a click on a cell
          */
         function handleCellClick(clickedCellEvent) {
+            playMusic(); // Try to play music on the first click
+
             const clickedCell = clickedCellEvent.target;
             const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
 
@@ -212,6 +233,7 @@
          * Resets the game to its initial state
          */
         function handleRestartGame() {
+            playMusic(); // Also try to play music on restart
             gameActive = true;
             currentPlayer = "X";
             gameState = ["", "", "", "", "", "", "", "", ""];
